@@ -1,0 +1,15 @@
+# Don't upload environment settings
+.env
+
+# Don't upload virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# VS Code settings (optional)
+.vscode/
+
+# JSON output files from consumers (optional)
+*.json
