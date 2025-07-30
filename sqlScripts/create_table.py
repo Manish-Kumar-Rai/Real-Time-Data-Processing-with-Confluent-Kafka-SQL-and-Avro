@@ -74,4 +74,5 @@ except pyodbc.Error as err:
 
 finally:
     if conn:
+        cursor.close()
         conn.close()
