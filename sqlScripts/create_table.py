@@ -17,7 +17,7 @@ database = os.getenv(config['database']['name_env'])
 username = os.getenv(config['database']['user_env'])
 password = os.getenv(config['database']['password_env'])
 
-# Define connection string for SQL Server
+# Define connection string for MSSQL Server
 conn_str = (
     f'DRIVER={driver};'
     f'SERVER={server};'
