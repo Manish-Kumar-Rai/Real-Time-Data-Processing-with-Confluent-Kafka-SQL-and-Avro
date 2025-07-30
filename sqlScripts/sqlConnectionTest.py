@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load config.yaml
-with open('..\config\config.yaml','r') as f:
+with open(r'..\config\config.yaml','r') as f:
     config = yaml.safe_load(f)
 
 # Read actual values from .env using keys from YAML
