@@ -1,5 +1,8 @@
+confluent-kafka==2.11.0
 Faker==37.5.3
+fastavro==1.11.1
 pyodbc==5.2.0
 python-dotenv==1.1.1
 PyYAML==6.0.2
+-e git+https://github.com/Manish-Kumar-Rai/Real-Time-Data-Processing-with-Confluent-Kafka-SQL-and-Avro.git@b2ea7c058f5d6a10026311fe7eb17979e4fcb969#egg=realtime_kafka_pipeline
 tzdata==2025.2
