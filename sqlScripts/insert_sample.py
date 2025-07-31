@@ -1,35 +1,9 @@
 # ---------- Simple Python script to auto-generate sample   ----------
 
-import pyodbc
-import yaml
-import os
 import random
+import datetime
 from faker import Faker
-from dotenv import load_dotenv
-
-# Load environment variables from .env
-load_dotenv()
-
-# Load config.yaml
-with open(r'..\config\config.yaml','r') as f:
-    config = yaml.safe_load(f)
-
-# Read actual values from .env using keys from YAML
-driver = config['database']['driver']
-server = os.getenv(config['database']['server_env'])
-database = os.getenv(config['database']['name_env'])
-username = os.getenv(config['database']['user_env'])
-password = os.getenv(config['database']['password_env'])
-
-
-# Define connection string for MSSQL Server
-conn_str = (
-    f'DRIVER={driver};'
-    f'SERVER={server};'
-    f'DATABASE={database};'
-    f'UID={username};'
-    f'PWD={password}'
-)
+from kafka_producer.mssql_connector import MSSQLConnector
 
 
 def insert_sample_data(n):
@@ -37,17 +11,22 @@ def insert_sample_data(n):
     categories = ['Electronics', 'Furniture', 'Stationery', 'Home Decor', 'Grocery']
 
     try:
-        conn = pyodbc.connect(conn_str,autocommit=True)
-        print(f'Connected successfully to MS SQL Server on {server}, database: {database}')
+        connector = MSSQLConnector()
+        conn = connector.get_connection()
+        conn.autocommit = True
         cursor = conn.cursor()
 
         products = []
-
+        base_time = datetime.datetime.now() - datetime.timedelta(days=30)
+        total_seconds = 30*24*3600
+        # Generate 500 random seconds and sort them for incremental timestamps
+        random_seconds = sorted(random.randint(0,total_seconds) for _ in range(n+1))
+        
         for i in range(1,n+1):
             name = fake.name()
             category = random.choice(categories)
             price = round(random.uniform(250.0,6578.0),2)
-            last_updated = fake.date_time_between(start_date='-30d',end_date='now')
+            last_updated = base_time + datetime.timedelta(seconds=random_seconds[i])
             products.append((i,name,category,price,last_updated))
         
         insert_query = '''
@@ -57,7 +36,7 @@ def insert_sample_data(n):
         
         cursor.executemany(insert_query,products)
         print(f"Inserted {n} fake products into the 'products' table.")
-    except pyodbc.Error as err:
+    except Exception as err:
         print(f'Error: {err}')
 
     finally:

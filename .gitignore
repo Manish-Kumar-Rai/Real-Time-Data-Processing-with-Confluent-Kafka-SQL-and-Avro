@@ -13,3 +13,6 @@ __pycache__/
 
 # JSON output files from consumers (optional)
 *.json
+
+# package info
+*.egg-info
