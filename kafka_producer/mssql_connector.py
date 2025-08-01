@@ -56,7 +56,7 @@ class MSSQLConnector:
         )
 
         try:
-            self.conn = pyodbc.connect(conn_str)
+            self.conn = pyodbc.connect(conn_str,timeout=10)
             logging.info(f'Connected to server: {self.server}, database: {self.database}')
             return self.conn
         except pyodbc.Error as err:
@@ -66,14 +66,14 @@ class MSSQLConnector:
     def read_last_fetched(self):
         '''Read the last fetched timestamp from file, or return default.'''
         path=os.path.join(CHECKPOINT_PATH, 'last_fetched.txt')
+        default = '1900-01-01 00:00:00'
         try:
             if os.path.exists(path):
                 with open(path,'r') as f:
                     timestamp = f.read().strip()
                     logging.info(f'Last fetched timestamp read: {timestamp}')
                     return timestamp
-            else:
-                default = '1900-01-01 00:00:00'
+            else:                
                 logging.info(f'Checkpoint not found. Using default: {default}')
                 return default
         except Exception as e:
@@ -84,7 +84,7 @@ class MSSQLConnector:
         '''Write the latest timestamp to checkpoint file.'''
         path=os.path.join(CHECKPOINT_PATH, 'last_fetched.txt')
         try:
-            with open(path,'w') as f:
+            with open(path,'w',encoding='utf-8') as f:
                 f.write(timestamp)
                 logging.info(f'Updated last fetched timestamp: {timestamp}')
         except Exception as e:
@@ -99,17 +99,15 @@ class MSSQLConnector:
         cursor = conn.cursor()
         last_fetched = self.read_last_fetched()
         try:
-            query = '''
-                SELECT id,name,category,last_updated
-                FROM products
-                WHERE last_updated > ?
-                ORDER BY last_updated ASC
-            '''
+            query = self.config.get('queries',{}).get('incremental_fetch')
             cursor.execute(query,last_fetched)
             rows = cursor.fetchall()
 
             if rows:
-                latest_timestamp = max([row[-1] for row in rows]).strftime('%Y-%m-%d %H:%M:%S')
+                latest_timestamp = max([
+                    row[-1] if isinstance(row[-1],str) else row[-1].strftime('%Y-%m-%d %H:%M:%S')
+                    for row in rows
+                ])
                 self.write_last_fetched(latest_timestamp)
                 return rows
             else:
@@ -130,12 +128,7 @@ class MSSQLConnector:
         cursor = self.conn.cursor()
 
         try:
-            query = '''
-                    SELECT 
-                        TOP 1 id,name,category,last_updated
-                    FROM products
-                    ORDER BY id DESC
-                '''
+            query = self.config.get('queries',{}).get('last_record')
             cursor.execute(query)
             row = list(cursor.fetchall())
             return row

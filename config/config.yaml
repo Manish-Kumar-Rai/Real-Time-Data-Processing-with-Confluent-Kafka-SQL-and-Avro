@@ -4,3 +4,16 @@ database:
   name_env: DB_NAME
   user_env: DB_USER
   password_env: DB_PASSWORD
+
+queries:
+  incremental_fetch: >
+    SELECT id,name,category,last_updated
+    FROM products
+    WHERE last_updated > ?
+    ORDER BY last_updated ASC
+
+  last_record: >
+    SELECT 
+        TOP 1 id,name,category,last_updated
+    FROM products
+    ORDER BY id DESC
