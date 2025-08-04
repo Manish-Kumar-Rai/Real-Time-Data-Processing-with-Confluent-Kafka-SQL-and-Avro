@@ -5,6 +5,18 @@ database:
   user_env: DB_USER
   password_env: DB_PASSWORD
 
+kafka:
+  bootstrap_servers_env: KAFKA_BOOTSTRAP_SERVERS
+  sasl_mechanisms_env: KAFKA_SASL_MECHANISMS
+  security_protocol_env: KAFKA_SECURITY_PROTOCOL
+  username_env: KAFKA_USERNAME
+  password_env: KAFKA_PASSWORD
+
+kafka_schema:
+  schema_registry_url: KAFKA_SCHEMA_REGISTRY_URL
+  schema_username: KAFKA_SCHEMA_REGISTRY_USERNAME
+  schema_password: KAFKA_SCHEMA_REGISTRY_PASSWORD
+
 queries:
   incremental_fetch: >
     SELECT id,name,category,last_updated
