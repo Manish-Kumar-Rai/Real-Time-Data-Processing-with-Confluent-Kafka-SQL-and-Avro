@@ -100,18 +100,30 @@ producer = SerializingProducer({
     'value.serializer': avro_serializer
 })
 
-rows = connector.fetch_incremental_data()
+logger.info('Starting Kafka producer Loop...')
+try:
+    while True:
+        rows = connector.fetch_incremental_data()
+        if rows:
+            for row in rows:
+                avro_record = transform_row_to_avro(row)
+                if avro_record:
+                    producer.produce(
+                        topic='product_updates',
+                        key=str(avro_record['id']),
+                        value=avro_record,
+                        on_delivery=delivery_report
+                    )
+                    
+            producer.flush()
+        else:
+            logger.info('No new records found. Sleeping..')
+            time.sleep(5)
 
-for row in rows:
-    avro_record = transform_row_to_avro(row)
-    if avro_record:
-        producer.produce(
-            topic='product_updates',
-            key=str(avro_record['id']),
-            value=avro_record,
-            on_delivery=delivery_report
-        )
-    time.sleep(2)
+except KeyboardInterrupt:
+    logger.info('Producer shutdown requested. Exiting gracefully...')
+    producer.flush()
 
-producer.flush()
-logger.info('All Data successfully published to Kafka')
+finally:
+    producer.flush()
+    logger.info('Producer shut down gracefully.')

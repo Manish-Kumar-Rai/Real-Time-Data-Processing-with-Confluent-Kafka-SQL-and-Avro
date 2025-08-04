@@ -26,6 +26,6 @@ queries:
 
   last_record: >
     SELECT 
-        TOP 1 id,name,category,last_updated
+        TOP 1 id,name,category,price,last_updated
     FROM products
     ORDER BY id DESC

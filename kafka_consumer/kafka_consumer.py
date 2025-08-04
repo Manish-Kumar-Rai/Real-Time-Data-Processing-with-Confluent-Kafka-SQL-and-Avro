@@ -1,16 +1,21 @@
 import os
 import threading
 from time import sleep
-import json
 from config.logger import get_logger
-from kafka_consumer.data_transform import transform_record
-from kafka_consumer.json_writer import write_json_to_file
+from data_transform import transform_record
+from json_writer import write_json_to_file
 from kafka_producer.mssql_connector import MSSQLConnector
 
 from confluent_kafka import DeserializingConsumer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.serialization import StringDeserializer
+
+BASE_DIR = os.path.dirname(os.path.abspath(__name__))
+KAFKA_OUTPUT_DIR = os.path.join(BASE_DIR,'kafka_ouput')
+KAFKA_OUTPUT_DIR = os.path.abspath(KAFKA_OUTPUT_DIR)
+os.mkdirs(KAFKA_OUTPUT_DIR,exist_ok=True)
+
 
 connector = MSSQLConnector()
 config = connector.get_config()
@@ -68,7 +73,8 @@ def consumer_worker(consumer_id):
             record = msg.value()
             if record:
                 transform = transform_record(record)
-                write_json_to_file(transform,f'consumer_output_{consumer_id}.json')
+                write_json_to_file(transform,os.path.join(KAFKA_OUTPUT_DIR,f'consumer_output_{consumer_id}.json'))
+                logger.info(f'[{consumer_id}] Processed and wrote record with ID {record.get('id')}')
     
     except KeyboardInterrupt:
         pass
