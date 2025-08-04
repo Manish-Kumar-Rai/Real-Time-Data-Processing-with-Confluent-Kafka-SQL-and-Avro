@@ -22,7 +22,10 @@ def insert_fake_products(n=5):
 
         last_record = connector.fetch_last_record()
         last_id = last_record[0][0] if last_record else 0
-        base_time = last_record[0][4] if last_record else datetime.datetime.now() - datetime.timedelta(days=90)
+        if last_record:
+            _,_,_,_,base_time = last_record[0][4]
+        else:
+            base_time = datetime.datetime.now() - datetime.timedelta(days=90)
         total_seconds = 30*24*3600
 
         # Generate random seconds and sort them for incremental timestamps
