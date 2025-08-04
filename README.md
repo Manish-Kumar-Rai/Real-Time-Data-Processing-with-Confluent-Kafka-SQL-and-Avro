@@ -140,7 +140,7 @@ queries:
 
 ## ✅ Output Example (JSON Line)
 ```json
-{"id": 1, "name": "Laptop", "category": "Electronics", "last_updated": "2025-08-03T14:21:33"}
+{"id": 1, "name": "Laptop", "category": "Electronics", "price": 576.89, "last_updated": "2025-08-03T14:21:33"}
 ```
 
 ---
