@@ -3,6 +3,7 @@ import yaml
 import pyodbc
 import logging
 from dotenv import load_dotenv
+from config.logger import get_logger
 
 # Get the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +24,7 @@ class MSSQLConnector:
         load_dotenv()
 
         # Setup logging
-        logging.basicConfig(level=logging.INFO,format='[%(levelname)s] %(message)s')
+        self.logger = get_logger(__name__) # __name__ is the module name
 
         # Load config.yaml
         try:
@@ -57,11 +58,15 @@ class MSSQLConnector:
 
         try:
             self.conn = pyodbc.connect(conn_str,timeout=10)
-            logging.info(f'Connected to server: {self.server}, database: {self.database}')
+            self.logger.info(f'Connected to server: {self.server}, database: {self.database}')
             return self.conn
         except pyodbc.Error as err:
-            logging.error(f'Connecion Error: {err}')
+            self.logger.error(f'Connecion Error: {err}')
             return None
+        
+    def get_config(self):
+        '''Return the loaded YAML config'''
+        return self.config
         
     def read_last_fetched(self):
         '''Read the last fetched timestamp from file, or return default.'''
@@ -71,13 +76,13 @@ class MSSQLConnector:
             if os.path.exists(path):
                 with open(path,'r') as f:
                     timestamp = f.read().strip()
-                    logging.info(f'Last fetched timestamp read: {timestamp}')
+                    self.logger.info(f'Last fetched timestamp read: {timestamp}')
                     return timestamp
             else:                
-                logging.info(f'Checkpoint not found. Using default: {default}')
+                self.logger.info(f'Checkpoint not found. Using default: {default}')
                 return default
         except Exception as e:
-            logging.error(f'Failed to read checkpoint: {e}')
+            self.logger.error(f'Failed to read checkpoint: {e}')
             return default
         
     def write_last_fetched(self,timestamp):
@@ -86,9 +91,9 @@ class MSSQLConnector:
         try:
             with open(path,'w',encoding='utf-8') as f:
                 f.write(timestamp)
-                logging.info(f'Updated last fetched timestamp: {timestamp}')
+                self.logger.info(f'Updated last fetched timestamp: {timestamp}')
         except Exception as e:
-            logging.error(f'Failed to write checkpoint: {e}')
+            self.logger.error(f'Failed to write checkpoint: {e}')
 
     def fetch_incremental_data(self):
         path=os.path.join(CHECKPOINT_PATH, 'last_fetched.txt')
@@ -111,11 +116,11 @@ class MSSQLConnector:
                 self.write_last_fetched(latest_timestamp)
                 return rows
             else:
-                logging.info('No new records found.')
+                self.logger.info('No new records found.')
                 return []
         
         except pyodbc.Error as e:
-            logging.error(f'Query Failed: {e}')
+            self.logger.error(f'Query Failed: {e}')
             return []
         
     def fetch_last_record(self):
@@ -133,14 +138,14 @@ class MSSQLConnector:
             row = list(cursor.fetchall())
             return row
         except pyodbc.Error as e:
-            logging.error(f'Query failed: {e}')
+            self.logger.error(f'Query failed: {e}')
             return []
         
     def close_connection(self):
         if self.conn:
             self.conn.close()
             self.conn = None
-            logging.info('Database connection closed.')
+            self.logger.info('Database connection closed.')
         
 if __name__ == '__main__':
     connector = MSSQLConnector()
