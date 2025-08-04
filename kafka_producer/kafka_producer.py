@@ -118,7 +118,7 @@ try:
             producer.flush()
         else:
             logger.info('No new records found. Sleeping..')
-            time.sleep(5)
+            time.sleep(10)
 
 except KeyboardInterrupt:
     logger.info('Producer shutdown requested. Exiting gracefully...')

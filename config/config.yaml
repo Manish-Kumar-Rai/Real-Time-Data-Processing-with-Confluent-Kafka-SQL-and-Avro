@@ -19,7 +19,7 @@ kafka_schema:
 
 queries:
   incremental_fetch: >
-    SELECT id,name,category,last_updated
+    SELECT id,name,category,price,last_updated
     FROM products
     WHERE last_updated > ?
     ORDER BY last_updated ASC

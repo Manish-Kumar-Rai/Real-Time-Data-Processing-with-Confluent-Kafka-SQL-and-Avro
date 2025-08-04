@@ -2,8 +2,8 @@ import os
 import threading
 from time import sleep
 from config.logger import get_logger
-from data_transform import transform_record
-from json_writer import write_json_to_file
+from kafka_consumer.data_transform import transform_record
+from kafka_consumer.json_writer import write_json_to_file,convert_datetimes_in_record
 from kafka_producer.mssql_connector import MSSQLConnector
 
 from confluent_kafka import DeserializingConsumer
@@ -14,7 +14,7 @@ from confluent_kafka.serialization import StringDeserializer
 BASE_DIR = os.path.dirname(os.path.abspath(__name__))
 KAFKA_OUTPUT_DIR = os.path.join(BASE_DIR,'kafka_ouput')
 KAFKA_OUTPUT_DIR = os.path.abspath(KAFKA_OUTPUT_DIR)
-os.mkdirs(KAFKA_OUTPUT_DIR,exist_ok=True)
+os.makedirs(KAFKA_OUTPUT_DIR,exist_ok=True)
 
 
 connector = MSSQLConnector()
@@ -52,7 +52,7 @@ def consumer_worker(consumer_id):
         'sasl.password':os.getenv(kafka_config['password_env']),
         'key.deserializer': key_deserializer,
         'value.deserializer':avro_deserializer,
-        'group.id':'group1',
+        'group.id':'group3',
         'auto.offset.reset':'earliest'
     })
 
@@ -73,8 +73,9 @@ def consumer_worker(consumer_id):
             record = msg.value()
             if record:
                 transform = transform_record(record)
+                transform = convert_datetimes_in_record(transform)
                 write_json_to_file(transform,os.path.join(KAFKA_OUTPUT_DIR,f'consumer_output_{consumer_id}.json'))
-                logger.info(f'[{consumer_id}] Processed and wrote record with ID {record.get('id')}')
+                logger.info(f"[{consumer_id}] Processed and wrote record with ID {record.get('id')}")
     
     except KeyboardInterrupt:
         pass
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     
     try:
         while True:
-            sleep(2)
+            sleep(3)
     except KeyboardInterrupt:
         logger.info('Shutting down consumers...')
 

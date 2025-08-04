@@ -64,7 +64,7 @@ def start_feeder(interval_sec=10,batch_size=5):
     logger.info(f'Auto Feeder Started - inserts {batch_size} records every {interval_sec} seconds.')
 
 if __name__ == '__main__':
-    start_feeder(interval_sec=5,batch_size=5)
+    start_feeder(interval_sec=10,batch_size=5)
 
     try:
         while True:
